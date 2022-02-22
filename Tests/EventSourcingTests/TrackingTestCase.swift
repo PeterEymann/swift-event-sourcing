@@ -27,7 +27,7 @@ func testProcessRecorder(recorder: ProcessRecorder) throws {
     // get current position
     XCTAssertEqual(recorder.maxTrackingId(applicationName: "upstreamApp"), 1)
 
-    /// check event can't be overwritten
+    // check event can't be overwritten
     XCTAssertThrowsError(try recorder.insertEvents([storedEvent3], tracking: tracking1)) {
         error in XCTAssertEqual(error as? RecorderError, RecorderError.IntegrityError)
     }

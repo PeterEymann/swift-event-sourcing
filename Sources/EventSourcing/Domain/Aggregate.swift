@@ -33,7 +33,7 @@ public protocol AggregateEvent: StoreableEvent {
     func apply<T: Aggregate>(obj: inout T) throws
 }
 
-extension AggregateEvent {
+public extension AggregateEvent {
     func mutate<T: Aggregate>(obj: inout T?) throws {
         /// Changes the state of the aggregate according to domain event attributes.
         // check event is next in sequence
@@ -64,12 +64,14 @@ public protocol AggregateCreatedEvent: AggregateEvent {
 }
 
 
-extension AggregateCreatedEvent {
+public extension AggregateCreatedEvent {
     func mutate<T: Aggregate>(obj: inout T?) throws {
         /// Constructs aggregate instance defined by domain event object attributes
         let found = try InjectedValues[\.aggregateRegistry].resolveAggregate(originatorTopic)
         if found is AggregateType.Type {
             obj = self.createAggregate() as? T
+        } else {
+            fatalError("aggregate topic \(originatorTopic) cannot be resolved")
         }
     }
 }
@@ -101,18 +103,18 @@ public protocol Aggregate: AnyObject, CollectsDomainEvents {
     func triggerEvent<T: AggregateEvent, A: Aggregate>(_ eventType: T.Type, for instance: A, payload: JSONDict?) throws
 }
 
-extension Aggregate {
-    public var id: UUID { self.state.id }
+public extension Aggregate {
+    var id: UUID { self.state.id }
     var version: Int { self.state.version }
     var createdOn: Date { self.state.createdOn }
     var modifiedOn: Date { self.state.modifiedOn }
         
-    public static func fromData(_ data: Data) -> Self {
+    static func fromData(_ data: Data) -> Self {
         /// Reconstruct the state of an Aggregate from serializable data
         self.init(state: try! JSONDecoder().decode(State.self, from: data))
     }
 
-    public func collect() -> [DomainEvent] {
+    func collect() -> [DomainEvent] {
         /// Pop all pending events
         var collected: [DomainEvent] = []
         while !self.pendingEvents.isEmpty {
@@ -122,7 +124,7 @@ extension Aggregate {
         return collected
     }
 
-    public func triggerEvent<T: AggregateEvent, A: Aggregate>(_ eventType: T.Type, for instance: A, payload: JSONDict?=nil) throws {
+    func triggerEvent<T: AggregateEvent, A: Aggregate>(_ eventType: T.Type, for instance: A, payload: JSONDict?=nil) throws {
         /// Trigger a new Aggregate Event
         var args: JSONDict
         if let data = payload {
@@ -149,8 +151,10 @@ public protocol HasEvents: AnyObject {
 
 
 open class GenericAggregate: HasEvents {
+    public init() {}
+    
     /// Subclass this to define new Aggregates
-    public class var events: [DomainEvent.Type] {
+    open class var events: [DomainEvent.Type] {
         /// Here we define the domain events that belong to this Aggregate
         fatalError("Aggregate.events not implemented")
     }

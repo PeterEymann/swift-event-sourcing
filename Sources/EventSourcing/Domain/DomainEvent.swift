@@ -28,7 +28,7 @@ public struct DomainEventData: Codable {
     let originatorVersion: Int
     let timeStamp: Date
     
-    init(_ jsonDict: JSONDict) {
+    public init(_ jsonDict: JSONDict) {
         originatorId = jsonDict["originatorId"] as! UUID
         originatorVersion = jsonDict["originatorVersion"] as! Int
         timeStamp = jsonDict["timeStamp"] as! Date
